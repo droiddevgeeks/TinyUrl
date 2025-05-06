@@ -1,19 +1,31 @@
-import { Controller, Post, Get, Param, Body } from "@nestjs/common";
+import { Controller, Post, Get, Param, Body, Res, Logger } from "@nestjs/common";
 import { TinyUrlService } from "./tinyurl.service";
 import { CreateUrlDto } from "./model/url.dto";
+import { Response } from "express";
 
-@Controller('url')
+@Controller()
 export class TinyUrlController {
+    private readonly logger = new Logger(TinyUrlController.name);
     constructor(private readonly tinyUrlService: TinyUrlService) {}
 
-    @Post('shorten')
-    async shortenUrl(@Body() createUrlDto: CreateUrlDto) {
-        return this.tinyUrlService.generateShortUrl(createUrlDto);
+    @Post('url/shorten')
+    async shortenUrl(@Body() createUrlDto: CreateUrlDto, @Res() res: Response) {
+        const shortUrl = await this.tinyUrlService.generateShortUrl(createUrlDto);
+        res.status(201).json({ shortUrl });
     }
 
 
     @Get(':shortUrl')
-    async getUrl(@Param('shortUrl') shortUrl: string) {
-        return this.tinyUrlService.getOriginalUrl(shortUrl);
+    async getUrl(@Param('shortUrl') shortUrl: string, @Res() res: Response) {
+        this.logger.log(`Redirecting to original URL for: ${shortUrl}`);
+        const originalUrl = await this.tinyUrlService.getOriginalUrl(shortUrl);
+        if (originalUrl) {
+            if (!originalUrl.startsWith('http://') && !originalUrl.startsWith('https://')) {
+                return res.status(400).json({ message: "Invalid original URL" });
+            }
+            return res.redirect(301, originalUrl);
+        } else {
+            return res.status(404).json({ message: "URL not found" });
+        }
     }
 }
