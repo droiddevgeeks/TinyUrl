@@ -1,27 +1,36 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { CreateUrlDto } from "./model/url.dto";
+import { TinyUrlRepository } from "./tinyurl.repository";
+import * as crypto from 'crypto';
 
 @Injectable()
 export class TinyUrlService {
   private readonly logger = new Logger(TinyUrlService.name);
-  private urls: Map<string, string> = new Map();
 
-  generateShortUrl(urlDto: CreateUrlDto): string {
-    const uniqueCode = this.createShortUrlCode(urlDto.originalUrl);
-    const shortUrl = `http://localhost:3000/${uniqueCode}`;
-    if (this.urls.has(uniqueCode)) {
+  constructor(private readonly tinyUrlRepository: TinyUrlRepository) {}
+
+  async generateShortUrl(createUrlDto: CreateUrlDto): Promise<string> {
+    let shortUrl = 'http://localhost:3000/';
+    const existingEntry = await this.tinyUrlRepository.findByOriginalUrl(createUrlDto.originalUrl);
+    if (existingEntry) {
+      this.logger.log(`Short URL already exists: ${existingEntry.shortCode}`);
+      shortUrl = `http://localhost:3000/${existingEntry.shortCode}`;
       return shortUrl;
     }
-    this.urls.set(uniqueCode, urlDto.originalUrl);
+    this.logger.log(`Generating short URL for: ${createUrlDto.originalUrl}`);
+    const uniqueCode = this.createMd5Hash(createUrlDto.originalUrl);
+    shortUrl = `http://localhost:3000/${uniqueCode}`;
+    await this.tinyUrlRepository.createShortUrl(uniqueCode, createUrlDto.originalUrl);
     return shortUrl;
   }
 
-  getOriginalUrl(shortCode: string): string | "" {
-    this.logger.log(`Retrieving original URL for: ${shortCode}`);
-    return this.urls.get(shortCode) || "";
+  async getOriginalUrl(shortCode: string): Promise<string | null> {
+    this.logger.log(`Retrieving original URL from: ${shortCode}`);
+    const urlEntry = await this.tinyUrlRepository.findbyShortUrl(shortCode);
+    return urlEntry ? urlEntry.originalUrl : null;
   }
 
-  private createShortUrlCode(originalUrl: string): string {
-    return Math.random().toString(36).substring(2, 8);
+  private createMd5Hash(originalUrl: string): string {
+    return crypto.createHash('md5').update(originalUrl).digest('hex').substring(0, 8); // Use the first 8 characters
   }
 }

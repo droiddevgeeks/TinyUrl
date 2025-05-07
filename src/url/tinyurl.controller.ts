@@ -15,10 +15,10 @@ export class TinyUrlController {
     }
 
 
-    @Get(':shortUrl')
-    async getUrl(@Param('shortUrl') shortUrl: string, @Res() res: Response) {
-        this.logger.log(`Redirecting to original URL for: ${shortUrl}`);
-        const originalUrl = await this.tinyUrlService.getOriginalUrl(shortUrl);
+    @Get(':shortCode')
+    async getUrl(@Param('shortCode') shortCode: string, @Res() res: Response) {
+        this.logger.log(`Searching original URL for: ${shortCode}`);
+        const originalUrl = await this.tinyUrlService.getOriginalUrl(shortCode);
         if (originalUrl) {
             if (!originalUrl.startsWith('http://') && !originalUrl.startsWith('https://')) {
                 return res.status(400).json({ message: "Invalid original URL" });
