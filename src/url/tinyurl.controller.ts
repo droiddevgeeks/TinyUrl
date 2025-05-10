@@ -6,11 +6,13 @@ import {
   Body,
   Res,
   Logger,
+  HttpStatus,
 } from "@nestjs/common";
 import { TinyUrlService } from "./tinyurl.service";
 import { CreateUrlDto } from "./model/url.dto";
 import { Response } from "express";
 import { ShortCodeValidationPipe } from "src/validation/shortcode.validation";
+import { isURL } from "class-validator";
 
 @Controller()
 export class TinyUrlController {
@@ -20,7 +22,7 @@ export class TinyUrlController {
   @Post("url/shorten")
   async shortenUrl(@Body() createUrlDto: CreateUrlDto, @Res() res: Response) {
     const shortUrl = await this.tinyUrlService.generateShortUrl(createUrlDto);
-    res.status(201).json({ shortUrl });
+    res.status(HttpStatus.CREATED).json({ shortUrl });
   }
 
   @Get(":shortCode")
@@ -29,15 +31,12 @@ export class TinyUrlController {
     this.logger.log(`Searching original URL for: ${shortCode}`);
     const originalUrl = await this.tinyUrlService.getOriginalUrl(shortCode);
     if (originalUrl) {
-      if (
-        !originalUrl.startsWith("http://") &&
-        !originalUrl.startsWith("https://")
-      ) {
-        return res.status(400).json({ message: "Invalid original URL" });
+      if(!isURL(originalUrl)) {
+        return res.status(HttpStatus.BAD_REQUEST).json({ message: "Invalid original URL" });
       }
-      return res.redirect(301, originalUrl);
+      return res.redirect(HttpStatus.MOVED_PERMANENTLY, originalUrl);
     } else {
-      return res.status(404).json({ message: "URL not found" });
+      return res.status(HttpStatus.NOT_FOUND).json({ message: "URL not found" });
     }
   }
 }

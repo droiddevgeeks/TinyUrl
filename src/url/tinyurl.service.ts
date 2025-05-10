@@ -6,12 +6,13 @@ import * as crypto from "crypto";
 @Injectable()
 export class TinyUrlService {
   private readonly logger = new Logger(TinyUrlService.name);
+  private readonly baseUrl = "http://localhost:3000/";
 
   constructor(private readonly tinyUrlRepository: TinyUrlRepository) {}
 
   async generateShortUrl(createUrlDto: CreateUrlDto): Promise<string> {
     const uniqueCode = this.createMd5Hash(createUrlDto.originalUrl);
-    const shortUrl = `http://localhost:3000/${uniqueCode}`;
+    const shortUrl = `${this.baseUrl}${uniqueCode}`;
 
     try {
       const updatedEntry = await this.tinyUrlRepository.findOneAndUpdate(
@@ -35,7 +36,7 @@ export class TinyUrlService {
           createUrlDto.originalUrl,
         );
         if (existingEntry?.shortCode) {
-          return `http://localhost:3000/${existingEntry?.shortCode}`;
+          return `${this.baseUrl}${existingEntry?.shortCode}`;
         }
       }
       throw error;
