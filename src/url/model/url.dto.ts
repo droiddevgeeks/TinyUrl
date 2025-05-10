@@ -1,8 +1,13 @@
-import { IsNotEmpty, IsString, IsUrl } from "class-validator";
+import { IsNotEmpty, IsNumber, IsString, IsUrl, Max, Min } from "class-validator";
 
 export class CreateUrlDto {
   @IsString()
-  @IsNotEmpty({ message: 'The URL field cannot be empty' })
-  @IsUrl({}, { message: 'The URL must be a valid URL' })
+  @IsNotEmpty({ message: "The URL field cannot be empty" })
+  @IsUrl({}, { message: "The URL must be a valid URL" })
   originalUrl: string = "";
+
+  @IsNumber()
+  @Min(1, { message: "expiresInDays must be at least 1." })
+  @Max(15, { message: "expiresInDays cannot be more than 15." })
+  expiresInDays: number = 7;
 }

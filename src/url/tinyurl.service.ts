@@ -13,11 +13,11 @@ export class TinyUrlService {
   async generateShortUrl(createUrlDto: CreateUrlDto): Promise<string> {
     const uniqueCode = this.createMd5Hash(createUrlDto.originalUrl);
     const shortUrl = `${this.baseUrl}${uniqueCode}`;
-
     try {
       const updatedEntry = await this.tinyUrlRepository.findOneAndUpdate(
         createUrlDto.originalUrl,
         uniqueCode,
+        createUrlDto.expiresInDays,
       );
 
       this.logger.log(
@@ -46,6 +46,14 @@ export class TinyUrlService {
   async getOriginalUrl(shortCode: string): Promise<string | null> {
     this.logger.log(`Retrieving original URL from: ${shortCode}`);
     const urlEntry = await this.tinyUrlRepository.findbyShortUrl(shortCode);
+    if (!urlEntry) {
+      this.logger.warn(`Short code ${shortCode} not found.`);
+      return 'URL not found.';
+    }
+    if (urlEntry.expiresAt && urlEntry.expiresAt < new Date()) {
+      this.logger.warn(`Short code ${shortCode} has expired.`);
+      return 'URL has expired.';
+    }
     return urlEntry ? urlEntry.originalUrl : null;
   }
 

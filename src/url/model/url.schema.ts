@@ -8,6 +8,8 @@ export class UrlShortener extends Document {
 
   @Prop({ required: true, unique: true })
   originalUrl: string = "";
+  @Prop({ required: true})
+  expiresAt?: Date;
   createdAt?: Date;
   updatedAt?: Date;
 }

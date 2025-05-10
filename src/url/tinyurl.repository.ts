@@ -14,11 +14,15 @@ export class TinyUrlRepository {
   async findOneAndUpdate(
     originalUrl: string,
     shortCode: string,
+    expiresInDays: number,
   ): Promise<{ isNew: boolean }> {
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + expiresInDays);
+
     const result = await this.urlModel
       .findOneAndUpdate(
         { originalUrl },
-        { originalUrl, shortCode },
+        { originalUrl, shortCode, expiresAt },
         { upsert: true, new: true, setDefaultsOnInsert: true },
       )
       .exec();
