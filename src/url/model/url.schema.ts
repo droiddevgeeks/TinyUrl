@@ -1,19 +1,15 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document } from "mongoose";
 
-@Schema({ collection: "url_shortner" })
+@Schema({ collection: "url_shortner",  timestamps: true  })
 export class UrlShortener extends Document {
   @Prop({ required: true, unique: true })
   shortCode: string = "";
 
   @Prop({ required: true, unique: true })
   originalUrl: string = "";
-
-  @Prop({ default: Date.now })
-  createdAt: string = Date.now().toString();
-
-  @Prop({ default: Date.now })
-  updatedAt: string = Date.now().toString();
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export const UrlShortenerSchema = SchemaFactory.createForClass(UrlShortener);

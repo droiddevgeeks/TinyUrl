@@ -22,7 +22,8 @@ export class TinyUrlRepository {
         { upsert: true, new: true, setDefaultsOnInsert: true },
       )
       .exec();
-    return { isNew: result.createdAt === result.updatedAt };
+      const isNew = result.createdAt?.getTime() === result.updatedAt?.getTime();
+      return { isNew };
   }
 
   async findbyShortUrl(shortCode: string): Promise<UrlShortener | null> {
