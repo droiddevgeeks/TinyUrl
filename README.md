@@ -1,4 +1,4 @@
-# TinyURL API
+# TinyURL API  [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/droiddevgeeks/TinyUrl)
 
 A URL shortening service built with [NestJS](https://nestjs.com/). This project allows users to shorten long URLs and retrieve the original URLs using the shortened ones.
 
