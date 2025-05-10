@@ -63,7 +63,7 @@ A URL shortening service built with [NestJS](https://nestjs.com/). This project 
 
    ```json
    {
-     "shortUrl": "http://localhost:3000/url/abc123"
+     "shortUrl": "http://localhost:3000/abc123"
    }
    ```
 

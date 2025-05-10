@@ -10,6 +10,7 @@ import {
 import { TinyUrlService } from "./tinyurl.service";
 import { CreateUrlDto } from "./model/url.dto";
 import { Response } from "express";
+import { ShortCodeValidationPipe } from "src/validation/shortcode.validation";
 
 @Controller()
 export class TinyUrlController {
@@ -23,7 +24,8 @@ export class TinyUrlController {
   }
 
   @Get(":shortCode")
-  async getUrl(@Param("shortCode") shortCode: string, @Res() res: Response) {
+  async getUrl(@Param("shortCode", new ShortCodeValidationPipe()) shortCode: string,
+   @Res() res: Response) {
     this.logger.log(`Searching original URL for: ${shortCode}`);
     const originalUrl = await this.tinyUrlService.getOriginalUrl(shortCode);
     if (originalUrl) {
