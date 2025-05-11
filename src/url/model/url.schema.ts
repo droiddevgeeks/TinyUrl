@@ -6,7 +6,7 @@ export class UrlShortener extends Document {
   @Prop({ required: true, unique: true })
   shortCode: string = "";
 
-  @Prop({ required: true, unique: true })
+  @Prop({ required: true, unique: true, index: true })
   originalUrl: string = "";
   @Prop({ required: true})
   expiresAt?: Date;

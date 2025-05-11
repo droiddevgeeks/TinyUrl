@@ -5,6 +5,8 @@ import { AppService } from "./app.service";
 import { ConfigModule } from "@nestjs/config";
 import { LoggerMiddleware } from "./middleware/logger.middleware";
 import { MongooseModule } from "@nestjs/mongoose";
+import { CacheModule } from "@nestjs/cache-manager";
+import { redisStore } from "cache-manager-redis-store";
 
 @Module({
   imports: [
@@ -14,6 +16,13 @@ import { MongooseModule } from "@nestjs/mongoose";
     MongooseModule.forRoot(
       process.env.MONGO_URI || "mongodb://localhost:27017/tinyurl",
     ),
+    CacheModule.register({
+      store: redisStore,
+      host: 'localhost',
+      port: process.env.REDIS_PORT,
+      ttl: 600,
+      isGlobal: true,
+    }),
     TinyUrlModule,
   ],
   controllers: [AppController],
