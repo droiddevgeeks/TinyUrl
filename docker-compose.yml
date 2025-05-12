@@ -6,10 +6,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "3000:3000" # Map container port 3000 to host port 3000
+    expose:
+      - "3000"
     depends_on:
-      - redis # Ensure Redis starts before the app
+      - redis-master
+      - redis-slave
     environment:
       - REDIS_HOST=${REDIS_HOST}
       - REDIS_PORT=${REDIS_PORT}
@@ -17,7 +18,36 @@ services:
       - .:/app
       - /app/node_modules
 
-  redis:
+  redis-master:
     image: redis:latest
+    container_name: redis-master
     ports:
-      - "6379:6379" # Map container port 6379 to host port 6379
+      - "6379:6379"
+    command: ["redis-server", "--port", "6379"]
+
+  redis-slave:
+    image: redis:latest
+    container_name: redis-slave
+    ports:
+      - "6380:6379"
+    command: ["redis-server", "--port", "6379", "--replicaof", "redis-master", "6379"]  
+  
+  nginx:
+    image: nginx:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - app
+  
+  sentinel:
+    image: redis:latest
+    container_name: redis-sentinel
+    depends_on:
+      - redis-master
+    ports:
+      - "26379:26379"
+    volumes:
+      - ./sentinel.conf:/etc/redis/sentinel.conf
+    command: ["redis-server", "/etc/redis/sentinel.conf", "--sentinel"]
