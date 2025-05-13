@@ -1,14 +1,10 @@
-import { Inject, Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { UrlShortener } from "./model/url.schema";
-import { CACHE_MANAGER } from "@nestjs/cache-manager";
-import { Cache } from "cache-manager";
 import * as crypto from "crypto";
-import {
-  TinyUrlRequestDto,
-  TinyUrlResponseDto,
-} from "./model/url.dto";
+import { TinyUrlRequestDto, TinyUrlResponseDto } from "./model/url.dto";
+import { CacheService } from "src/cache/cache.service";
 
 @Injectable()
 export class TinyUrlRepository {
@@ -17,12 +13,10 @@ export class TinyUrlRepository {
   constructor(
     @InjectModel(UrlShortener.name)
     private readonly urlModel: Model<UrlShortener>,
-    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache
+    private readonly cacheService: CacheService
   ) {}
 
-  async findOneAndUpdate(
-    createUrlDto: TinyUrlRequestDto
-  ): Promise<string> {
+  async findOneAndUpdate(createUrlDto: TinyUrlRequestDto): Promise<string> {
     const { originalUrl, expiresInDays } = createUrlDto;
     const shortCode = this.createMd5Hash(originalUrl);
     let cacheData = await this.checkIfUrlExistsInCache(shortCode);
@@ -42,7 +36,7 @@ export class TinyUrlRepository {
       )
       .exec();
     const result = this.prepareResult(dbResult);
-    await this.cacheManager.set(
+    await this.cacheService.set(
       this.getCacheKey(shortCode),
       result,
       expiresInDays * 24 * 60 * 60
@@ -50,9 +44,7 @@ export class TinyUrlRepository {
     return result.shortUrl;
   }
 
-  async findbyShortCode(
-    shortCode: string
-  ): Promise<TinyUrlResponseDto | null> {
+  async findbyShortCode(shortCode: string): Promise<TinyUrlResponseDto | null> {
     const cachedData = await this.checkIfUrlExistsInCache(shortCode);
     if (cachedData) {
       this.logger.log(`Found in cache : ${JSON.stringify(cachedData)}`);
@@ -65,7 +57,10 @@ export class TinyUrlRepository {
     return null;
   }
 
-  async findByOriginalUrl(originalUrl: string): Promise<TinyUrlResponseDto | null> {
+  async findByOriginalUrl(
+    originalUrl: string
+  ): Promise<TinyUrlResponseDto | null> {
+    this.logger.log(`Searching for original URL: ${originalUrl}`);
     const dbResult = await this.urlModel.findOne({ originalUrl }).exec();
     if (dbResult) {
       return this.prepareResult(dbResult);
@@ -78,7 +73,7 @@ export class TinyUrlRepository {
   ): Promise<TinyUrlResponseDto | null> {
     const cacheKey = this.getCacheKey(uniqueCode);
     const cachedData =
-      await this.cacheManager.get<TinyUrlResponseDto>(cacheKey);
+      await this.cacheService.get<TinyUrlResponseDto>(cacheKey);
     return cachedData;
   }
 
@@ -94,7 +89,7 @@ export class TinyUrlRepository {
     return `url:${uniqueCode}`;
   }
 
-  private prepareResult(result: UrlShortener){
+  private prepareResult(result: UrlShortener) {
     return new TinyUrlResponseDto({
       originalUrl: result?.originalUrl,
       shortUrl: `${this.baseUrl}${result?.shortCode}`,
