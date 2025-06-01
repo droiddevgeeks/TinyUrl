@@ -9,6 +9,9 @@ export class LoggerMiddleware implements NestMiddleware {
     const startTime = Date.now();
     this.logger.log(`[Request] ${method} ${originalUrl}`);
 
+    const ip = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    this.logger.log(`Request from IP: ${ip}`);
+
     res.on("finish", () => {
       const { statusCode } = res;
       const endTime = Date.now();

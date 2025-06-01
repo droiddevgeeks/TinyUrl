@@ -82,11 +82,17 @@ A URL shortening service built with [NestJS](https://nestjs.com/). This project 
 
 ```markdown
 src/
-├── app.module.ts          # Main application module
-├── app.controller.ts      # Root controller
-├── app.service.ts         # Root service
+├── cache/
+│   └──cache.module.ts       # Redis cache module setup ([src/cache/cache.module.ts](src/cache/cache.module.ts))
+│   └──cache.provider.ts     # Redis client provider ([src/cache/cache.provider.ts](src/cache/cache.provider.ts))
+│   └──cache.service.ts      # Cache service abstraction ([src/cache/cache.service.ts](src/cache/cache.service.ts))
+├── app.module.ts            # Main application module
+├── app.controller.ts        # Root controller
+├── app.service.ts           # Root service
 ├── middleware/
 │   └── logger.middleware.ts # Centralized logging middleware
+|   └── throttler.exception.filter.ts # Handles rate-limiting exceptions ([src/middleware/throttler.exception.filter.ts](src/middleware/throttler.exception.filter.ts))
+│   └── throttler.gaurd.ts           # Custom throttler guard with logging ([src/middleware/throttler.gaurd.ts](src/middleware/throttler.gaurd.ts))
 ├── url/
 │   ├── tinyurl.controller.ts # URL controller
 │   ├── tinyurl.service.ts    # URL service
@@ -96,6 +102,21 @@ src/
 
 ## Centralized Logging
 All incoming requests and outgoing responses are logged using a custom middleware (```LoggerMiddleware```). Logs include:
+
+## Caching Layer
+
+This project uses Redis for caching URL mappings to improve performance and reduce database load. The cache is managed via:
+
+- [`CacheModule`](src/cache/cache.module.ts): Registers the cache service and provider.
+- [`CacheProvider`](src/cache/cache.provider.ts): Configures and provides a Redis client.
+- [`CacheService`](src/cache/cache.service.ts): Exposes methods to set/get cache entries and manages Redis connection lifecycle.
+
+Make sure to configure your `.env` file with the correct Redis connection details.
+
+## Rate Limiting
+
+- [`throttler.exception.filter.ts`](src/middleware/throttler.exception.filter.ts): Catches and formats rate-limiting errors with a user-friendly message.
+- [`throttler.gaurd.ts`](src/middleware/throttler.gaurd.ts): Logs throttler keys for better monitoring and debugging of rate-limited requests.
 
 ## License
 This project is licensed under the MIT License.
