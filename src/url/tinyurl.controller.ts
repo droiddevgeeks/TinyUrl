@@ -19,7 +19,7 @@ export class TinyUrlController {
   private readonly logger = new Logger(TinyUrlController.name);
   constructor(private readonly tinyUrlService: TinyUrlService) {}
 
-  @Post("url/shorten")
+  @Post("shorten")
   async shortenUrl(@Body() createUrlDto: TinyUrlRequestDto, @Res() res: Response) {
     const shortUrl = await this.tinyUrlService.generateShortUrl(createUrlDto);
     res.status(HttpStatus.CREATED).json({ shortUrl });
