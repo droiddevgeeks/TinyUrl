@@ -9,7 +9,7 @@ export class TinyUrlRequestDto {
   @IsNumber()
   @Min(1, { message: "expiresInDays must be at least 1." })
   @Max(15, { message: "expiresInDays cannot be more than 15." })
-  expiresInDays: number = 7;
+  expiresInDays: number = 1;
 }
 
 export class TinyUrlResponseDto {

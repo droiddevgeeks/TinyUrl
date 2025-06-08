@@ -15,3 +15,4 @@ export class UrlShortener extends Document {
 }
 
 export const UrlShortenerSchema = SchemaFactory.createForClass(UrlShortener);
+UrlShortenerSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
